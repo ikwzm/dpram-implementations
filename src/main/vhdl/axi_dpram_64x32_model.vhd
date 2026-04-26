@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_dpram_64x32_model.vhd
 --!     @brief   Dual Port RAM (64words x 32bit) 
---!     @version 1.0.0
+--!     @version 1.1.0
 --!     @date    2026/4/26
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
@@ -239,7 +239,6 @@ begin
             if (RST = '1') then
                 r_state    <= IDLE;
                 ram_raddr  <= (others => '0');
-                regs_rdata <= (others => '0');
             elsif (ACLK'event and ACLK = '1') then
                 case r_state is
                     when IDLE =>
@@ -249,17 +248,19 @@ begin
                             r_state   <= IDLE;
                         end if;
                         ram_raddr  <= regs_addr(regs_addr'high downto DATA_SIZE);
-                        regs_rdata <= (others => '0');
                     when S_REQ =>
                         r_state    <= S_ACK;
-                        regs_rdata <= ram_rdata;
                     when others =>
                         r_state    <= IDLE;
                         ram_raddr  <= (others => '0');
-                        regs_rdata <= (others => '0');
                 end case;
             end if;
         end process;
+        process (ACLK) begin
+            if (ACLK'event and ACLK = '1') then
+                regs_rdata <= ram_rdata;
+            end if;
+        end process;                           
         ---------------------------------------------------------------------------
         -- 
         ---------------------------------------------------------------------------
