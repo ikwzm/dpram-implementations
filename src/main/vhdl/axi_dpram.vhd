@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_dpram.vhd
 --!     @brief   Dual Port RAM with AXI4 Lite I/F
---!     @version 1.2.0
+--!     @version 1.3.0
 --!     @date    2026/4/27
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
@@ -48,8 +48,8 @@ entity  AXI_DPRAM is
         C_ALEN_WIDTH    : integer :=  8;
         C_ID_WIDTH      : integer :=  4;
         C_DATA_WIDTH    : integer := 32;
-        RAM_ADDR_BITS   : integer :=  6;
-        RAM_DATA_BITS   : integer := 32
+        RAM_ADDR_WIDTH  : integer :=  6;
+        RAM_DATA_WIDTH  : integer := 32
     );
     port (
         ARESETn         : in    std_logic;
@@ -114,11 +114,11 @@ architecture RTL of AXI_DPRAM is
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
-    signal    ram_raddr          :  std_logic_vector(RAM_ADDR_BITS  -1 downto 0);
-    signal    ram_waddr          :  std_logic_vector(RAM_ADDR_BITS  -1 downto 0);
-    signal    ram_we             :  std_logic_vector(RAM_DATA_BITS  -1 downto 0);
-    signal    ram_wdata          :  std_logic_vector(RAM_DATA_BITS  -1 downto 0);
-    signal    ram_rdata          :  std_logic_vector(RAM_DATA_BITS  -1 downto 0);
+    signal    ram_raddr          :  std_logic_vector(RAM_ADDR_WIDTH  -1 downto 0);
+    signal    ram_waddr          :  std_logic_vector(RAM_ADDR_WIDTH  -1 downto 0);
+    signal    ram_we             :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
+    signal    ram_wdata          :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
+    signal    ram_rdata          :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
@@ -148,16 +148,16 @@ begin
         type      STATE_TYPE    is (IDLE, S_REQ, S_ACK);
         signal    r_state       :  STATE_TYPE;
         signal    w_state       :  STATE_TYPE;
-        constant  RAM_DATA_SIZE :  integer := CALC_DATA_SIZE(RAM_DATA_BITS);
+        constant  RAM_DATA_SIZE :  integer := CALC_DATA_SIZE(RAM_DATA_WIDTH);
         constant  sig_1         :  std_logic := '1';
         signal    regs_req      :  std_logic;
         signal    regs_write    :  std_logic;
         signal    regs_ack      :  std_logic;
         constant  regs_err      :  std_logic := '0';
-        signal    regs_addr     :  std_logic_vector(RAM_ADDR_BITS+RAM_DATA_SIZE-1 downto 0);
-        signal    regs_ben      :  std_logic_vector(RAM_DATA_BITS/8            -1 downto 0);
-        signal    regs_wdata    :  std_logic_vector(RAM_DATA_BITS              -1 downto 0);
-        signal    regs_rdata    :  std_logic_vector(RAM_DATA_BITS              -1 downto 0);
+        signal    regs_addr     :  std_logic_vector(RAM_ADDR_WIDTH+RAM_DATA_SIZE-1 downto 0);
+        signal    regs_ben      :  std_logic_vector(RAM_DATA_WIDTH/8            -1 downto 0);
+        signal    regs_wdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
+        signal    regs_rdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
     begin
         AXI4: AXI4_REGISTER_INTERFACE                  --
             generic map (                              --
@@ -166,7 +166,7 @@ begin
                 AXI4_DATA_WIDTH => C_DATA_WIDTH      , --
                 AXI4_ID_WIDTH   => C_ID_WIDTH        , --
                 REGS_ADDR_WIDTH => regs_addr'length  , --
-                REGS_DATA_WIDTH => RAM_DATA_BITS     , --
+                REGS_DATA_WIDTH => RAM_DATA_WIDTH    , --
                 WDATA_PIPELINE  => 0                 , --
                 RDATA_PIPELINE  => 0                   --
             )                                          -- 
@@ -278,7 +278,7 @@ begin
                             w_state   <= S_ACK; -- early acknowledge.
                             ram_waddr <= regs_addr(regs_addr'high downto RAM_DATA_SIZE);
                             ram_wdata <= regs_wdata;
-                            for i in 0 to RAM_DATA_BITS-1 loop
+                            for i in 0 to RAM_DATA_WIDTH-1 loop
                                 if (regs_ben(i/8) = '1') then
                                     ram_we(i) <= '1';
                                 else
@@ -316,8 +316,8 @@ begin
     -------------------------------------------------------------------------------
     U: DPRAM
         generic map (
-            DATA_BITS   => RAM_DATA_BITS,
-            ADDR_BITS   => RAM_ADDR_BITS
+            DATA_BITS   => RAM_DATA_WIDTH,
+            ADDR_BITS   => RAM_ADDR_WIDTH
         )
         port map (
             WCLK        => ACLK         ,

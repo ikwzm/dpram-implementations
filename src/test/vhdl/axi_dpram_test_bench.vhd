@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_dpram_test_bench.vhd
 --!     @brief   Test Bench axi_dpram
---!     @version 1.0.0
+--!     @version 1.3.0
 --!     @date    2026/4/27
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ entity  AXI_DPRAM_TEST_BENCH is
     generic (
         NAME            : STRING  := "AXI_DPRAM_TEST_BENCH";
         SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
-        RAM_ADDR_BITS   : integer := 6;
-        RAM_DATA_BITS   : integer := 32;
+        RAM_ADDR_WIDTH  : integer := 6;
+        RAM_DATA_WIDTH  : integer := 32;
         FINISH_ABORT    : boolean := FALSE
     );
 end     AXI_DPRAM_TEST_BENCH;
@@ -378,8 +378,8 @@ begin
             C_ADDR_WIDTH    => AXI4_ADDR_WIDTH , 
             C_DATA_WIDTH    => AXI4_DATA_WIDTH , 
             C_ID_WIDTH      => WIDTH.ID        ,
-            RAM_ADDR_BITS   => RAM_ADDR_BITS   ,
-            RAM_DATA_BITS   => RAM_DATA_BITS
+            RAM_ADDR_WIDTH  => RAM_ADDR_WIDTH  ,
+            RAM_DATA_WIDTH  => RAM_DATA_WIDTH
         )
         port map (
         ---------------------------------------------------------------------------
@@ -489,8 +489,8 @@ architecture MODEL of AXI_DPRAM_64x32_MODEL_TEST_BENCH is
      generic (
         NAME            : STRING  := "AXI_DPRAM_TEST_BENCH";
         SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
-        RAM_ADDR_BITS   : integer := 6;
-        RAM_DATA_BITS   : integer := 32;
+        RAM_ADDR_WIDTH  : integer := 6;
+        RAM_DATA_WIDTH  : integer := 32;
         FINISH_ABORT    : boolean := FALSE
     );
   end component;
@@ -498,8 +498,8 @@ begin
     U: AXI_DPRAM_TEST_BENCH generic map(
         NAME            => NAME         ,
         SCENARIO_FILE   => SCENARIO_FILE,
-        RAM_ADDR_BITS   => 6            ,
-        RAM_DATA_BITS   => 32           ,
+        RAM_ADDR_WIDTH  => 6            ,
+        RAM_DATA_WIDTH  => 32           ,
         FINISH_ABORT    => FINISH_ABORT
     );
 end MODEL;
