@@ -10,4 +10,4 @@ add_vhdl_file sim_1     DUMMY_PLUG ../../../Dummy_Plug/src/main/vhdl/axi4/axi4_m
 add_vhdl_file sim_1     DUMMY_PLUG ../../../Dummy_Plug/src/main/vhdl/axi4/axi4_models.vhd
 add_vhdl_file sim_1     DUMMY_PLUG ../../../Dummy_Plug/src/main/vhdl/axi4/axi4_signal_printer.vhd
 add_vhdl_file sim_1     DUMMY_PLUG ../../../Dummy_Plug/src/main/vhdl/core/marchal.vhd
-add_vhdl_file sim_1     WORK ../../../src/test/vhdl/axi_dpram_test_bench.vhd
+add_vhdl_file sim_1     WORK ../../../src/test/vhdl/axi_spram_test_bench.vhd

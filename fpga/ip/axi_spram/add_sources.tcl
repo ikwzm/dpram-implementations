@@ -13,6 +13,6 @@ add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_register_write_
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/components/queue_arbiter.vhd
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_register_interface.vhd
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/components/queue_arbiter_one_hot_arch.vhd
-add_vhdl_file sources_1 WORK ../../../src/main/vhdl/dpram.vhd
-add_vhdl_file sources_1 WORK ../../../src/main/vhdl/axi_dpram.vhd
-add_vhdl_file sources_1 WORK ../../../src/main/vhdl/dpram_model.vhd
+add_vhdl_file sources_1 WORK ../../../src/main/vhdl/spram.vhd
+add_vhdl_file sources_1 WORK ../../../src/main/vhdl/axi_spram.vhd
+add_vhdl_file sources_1 WORK ../../../src/main/vhdl/spram_model.vhd
