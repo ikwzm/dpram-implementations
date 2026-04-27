@@ -205,12 +205,14 @@ proc create_root_design { parentCell } {
   #
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
   # 
-  # Create instance: AXI_DPRAM_64x32_MODEL and set properties
+  # Create instance: AXI_DPRAM and set properties
   #
-  set AXI_DPRAM_64x32_0 [ create_bd_cell -type ip -vlnv ikwzm:PIPEWORK:AXI_DPRAM_64x32_MODEL:1.1 AXI_DPRAM_64X32_0 ]
+  set AXI_DPRAM_64x32_0 [ create_bd_cell -type ip -vlnv ikwzm:PIPEWORK:AXI_DPRAM:1.0 AXI_DPRAM_64X32_0 ]
   set_property -dict [ list CONFIG.C_ADDR_WIDTH   {32} ] $AXI_DPRAM_64x32_0
   set_property -dict [ list CONFIG.C_DATA_WIDTH   {32} ] $AXI_DPRAM_64x32_0
   set_property -dict [ list CONFIG.C_ID_WIDTH      {5} ] $AXI_DPRAM_64x32_0
+  set_property -dict [ list CONFIG.RAM_ADDR_WIDTH  {6} ] $AXI_DPRAM_64x32_0
+  set_property -dict [ list CONFIG.RAM_DATA_WIDTH {32} ] $AXI_DPRAM_64x32_0
   #
   # Create instance: axi_interconnect_csr, and set properties
   #
