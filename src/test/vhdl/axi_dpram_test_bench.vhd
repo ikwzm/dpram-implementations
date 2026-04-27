@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
---!     @file    axi_dpram_64x32_model_test_bench.vhd
---!     @brief   Test Bench axi_dpram_64x32_model
+--!     @file    axi_dpram_test_bench.vhd
+--!     @brief   Test Bench axi_dpram
 --!     @version 1.0.0
---!     @date    2026/4/26
+--!     @date    2026/4/27
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -35,6 +35,20 @@
 --
 -----------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------
+-- AXI_DPRAM_TEST_BENCH
+-----------------------------------------------------------------------------------
+library ieee;
+use     ieee.std_logic_1164.all;
+entity  AXI_DPRAM_TEST_BENCH is
+    generic (
+        NAME            : STRING  := "AXI_DPRAM_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
+        RAM_ADDR_BITS   : integer := 6;
+        RAM_DATA_BITS   : integer := 32;
+        FINISH_ABORT    : boolean := FALSE
+    );
+end     AXI_DPRAM_TEST_BENCH;
+-----------------------------------------------------------------------------------
 --
 -----------------------------------------------------------------------------------
 library ieee;
@@ -50,17 +64,7 @@ use     DUMMY_PLUG.CORE.MARCHAL;
 use     DUMMY_PLUG.CORE.REPORT_STATUS_TYPE;
 use     DUMMY_PLUG.CORE.REPORT_STATUS_VECTOR;
 use     DUMMY_PLUG.CORE.MARGE_REPORT_STATUS;
-entity  AXI_DPRAM_64X32_MODEL_TEST_BENCH is
-    generic (
-        NAME            : STRING  := "AXI_DPRAM_64x32_MODEL_TEST_BENCH";
-        SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
-        FINISH_ABORT    : boolean := FALSE
-    );
-end     AXI_DPRAM_64X32_MODEL_TEST_BENCH;
------------------------------------------------------------------------------------
---
------------------------------------------------------------------------------------
-architecture MODEL of AXI_DPRAM_64X32_MODEL_TEST_BENCH is
+architecture MODEL of AXI_DPRAM_TEST_BENCH is
     -------------------------------------------------------------------------------
     -- 各種定数
     -------------------------------------------------------------------------------
@@ -369,11 +373,13 @@ begin
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
-    DUT: entity WORK.AXI_DPRAM_64x32_MODEL
+    DUT: entity WORK.AXI_DPRAM
         generic map (
             C_ADDR_WIDTH    => AXI4_ADDR_WIDTH , 
             C_DATA_WIDTH    => AXI4_DATA_WIDTH , 
-            C_ID_WIDTH      => WIDTH.ID        
+            C_ID_WIDTH      => WIDTH.ID        ,
+            RAM_ADDR_BITS   => RAM_ADDR_BITS   ,
+            RAM_DATA_BITS   => RAM_DATA_BITS
         )
         port map (
         ---------------------------------------------------------------------------
@@ -468,3 +474,33 @@ begin
  -- SYNC_PRINT_0: SYNC_PRINT generic map(string'("AXI4_TEST_1:SYNC(0)")) port map (SYNC(0));
  -- SYNC_PRINT_1: SYNC_PRINT generic map(string'("AXI4_TEST_1:SYNC(1)")) port map (SYNC(1));
 end MODEL;
+-----------------------------------------------------------------------------------
+--
+-----------------------------------------------------------------------------------
+entity  AXI_DPRAM_64x32_MODEL_TEST_BENCH is
+    generic (
+        NAME            : STRING  := "AXI_DPRAM_64x32_MODEL_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
+        FINISH_ABORT    : boolean := FALSE
+    );
+end     AXI_DPRAM_64x32_MODEL_TEST_BENCH;
+architecture MODEL of AXI_DPRAM_64x32_MODEL_TEST_BENCH is
+  component  AXI_DPRAM_TEST_BENCH 
+     generic (
+        NAME            : STRING  := "AXI_DPRAM_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
+        RAM_ADDR_BITS   : integer := 6;
+        RAM_DATA_BITS   : integer := 32;
+        FINISH_ABORT    : boolean := FALSE
+    );
+  end component;
+begin
+    U: AXI_DPRAM_TEST_BENCH generic map(
+        NAME            => NAME         ,
+        SCENARIO_FILE   => SCENARIO_FILE,
+        RAM_ADDR_BITS   => 6            ,
+        RAM_DATA_BITS   => 32           ,
+        FINISH_ABORT    => FINISH_ABORT
+    );
+end MODEL;
+

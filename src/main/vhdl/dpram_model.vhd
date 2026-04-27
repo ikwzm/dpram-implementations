@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
---!     @file    dpram_64x32_model.vhd
---!     @brief   Dual Port RAM (64words x 32bit) 
+--!     @file    dpram_model.vhd
+--!     @brief   Generic Dual Port RAM Architecture(Model)
 --!     @version 1.0.0
---!     @date    2026/4/26
+--!     @date    2026/4/27
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -34,30 +34,15 @@
 --      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 -----------------------------------------------------------------------------------
-library ieee;
-use     ieee.std_logic_1164.all;
------------------------------------------------------------------------------------
---! @brief   DPRAM :
------------------------------------------------------------------------------------
-entity  DPRAM_64x32_MODEL is
-    port (
-        WCLK        : in  std_logic;
-        WE          : in  std_logic_vector(31 downto 0);
-        WADDR       : in  std_logic_vector( 5 downto 0);
-        WDATA       : in  std_logic_vector(31 downto 0);
-        RADDR       : in  std_logic_vector( 5 downto 0);
-        RDATA       : out std_logic_vector(31 downto 0)
-    );
-end     DPRAM_64x32_MODEL;
 -----------------------------------------------------------------------------------
 -- アーキテクチャ本体
 -----------------------------------------------------------------------------------
 library ieee;
 use     ieee.std_logic_1164.all;
 use     ieee.numeric_std.all;
-architecture MODEL of DPRAM_64x32_MODEL is
+architecture MODEL of DPRAM is
     constant  INDEX_MIN     :  integer := 0;
-    constant  INDEX_MAX     :  integer := 63;
+    constant  INDEX_MAX     :  integer := 2**ADDR_BITS-1;
     subtype   INDEX_TYPE    is integer range INDEX_MIN to INDEX_MAX;
     function  addr_to_index(ADDR: std_logic_vector) return INDEX_TYPE is
         alias     u_addr    :  std_logic_vector(ADDR'length-1 downto 0) is ADDR;
@@ -72,7 +57,7 @@ architecture MODEL of DPRAM_64x32_MODEL is
         end loop;
         return to_integer(u_index);
     end function;
-    subtype   DATA_TYPE     is std_logic_vector(31 downto 0);
+    subtype   DATA_TYPE     is std_logic_vector(DATA_BITS-1 downto 0);
     type      DATA_VECTOR   is array(integer range <>) of DATA_TYPE;
     signal    ram           :  DATA_VECTOR(INDEX_MIN to INDEX_MAX);
     signal    r_index       :  INDEX_TYPE;
