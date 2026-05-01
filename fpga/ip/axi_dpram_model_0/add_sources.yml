@@ -16,6 +16,8 @@
     Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
     PathList :  
         - "../../../src/main/vhdl/"
+    Use      :
+        - "DPRAM(MODEL_0)"
     Top      :
         - "AXI_DPRAM"
         
