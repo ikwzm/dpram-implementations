@@ -14,5 +14,8 @@
     PathList :  
         - "../../../src/test/vhdl/"
     Top      :
-        - "AXI_DPRAM_64X32_MODEL_TEST_BENCH"
+        - "AXI_DPRAM_64X32_N4_MODEL_TEST_BENCH"
+        - "AXI_DPRAM_64X32_N8_MODEL_TEST_BENCH"
+        - "AXI_DPRAM_64X32_N16_MODEL_TEST_BENCH"
+        - "AXI_DPRAM_64X32_N32_MODEL_TEST_BENCH"
         

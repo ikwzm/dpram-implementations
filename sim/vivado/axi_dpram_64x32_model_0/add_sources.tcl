@@ -10,9 +10,6 @@ add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/components/pool_outlet_po
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_data_outlet_port.vhd
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_register_read_interface.vhd
 add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_register_write_interface.vhd
-add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/components/queue_arbiter.vhd
-add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/axi4/axi4_register_interface.vhd
-add_vhdl_file sources_1 PIPEWORK ../../../PipeWork/src/components/queue_arbiter_one_hot_arch.vhd
 add_vhdl_file sources_1 WORK ../../../src/main/vhdl/dpram.vhd
 add_vhdl_file sources_1 WORK ../../../src/main/vhdl/axi_dpram.vhd
-add_vhdl_file sources_1 WORK ../../../src/main/vhdl/dpram_model.vhd
+add_vhdl_file sources_1 WORK ../../../src/main/vhdl/dpram_model_0.vhd
