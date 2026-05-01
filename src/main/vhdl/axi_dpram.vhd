@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_dpram.vhd
 --!     @brief   Dual Port RAM with AXI4 Lite I/F
---!     @version 1.3.0
---!     @date    2026/4/27
+--!     @version 1.1.0
+--!     @date    2026/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -49,7 +49,8 @@ entity  AXI_DPRAM is
         C_ID_WIDTH      : integer :=  4;
         C_DATA_WIDTH    : integer := 32;
         RAM_ADDR_WIDTH  : integer :=  6;
-        RAM_DATA_WIDTH  : integer := 32
+        RAM_DATA_WIDTH  : integer := 32;
+        RAM_NUM         : integer :=  4
     );
     port (
         ARESETn         : in    std_logic;
@@ -92,7 +93,8 @@ library ieee;
 use     ieee.std_logic_1164.all;
 library PIPEWORK;
 use     PIPEWORK.AXI4_TYPES.all;
-use     PIPEWORK.AXI4_COMPONENTS.AXI4_REGISTER_INTERFACE;
+use     PIPEWORK.AXI4_COMPONENTS.AXI4_REGISTER_READ_INTERFACE;
+use     PIPEWORK.AXI4_COMPONENTS.AXI4_REGISTER_WRITE_INTERFACE;
 architecture RTL of AXI_DPRAM is
     -------------------------------------------------------------------------------
     -- リセット信号.
@@ -114,22 +116,27 @@ architecture RTL of AXI_DPRAM is
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
-    signal    ram_raddr          :  std_logic_vector(RAM_ADDR_WIDTH  -1 downto 0);
-    signal    ram_waddr          :  std_logic_vector(RAM_ADDR_WIDTH  -1 downto 0);
-    signal    ram_we             :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
-    signal    ram_wdata          :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
-    signal    ram_rdata          :  std_logic_vector(RAM_DATA_WIDTH  -1 downto 0);
+    constant  WORD_BITS          :  integer := RAM_DATA_WIDTH/RAM_NUM;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
+    signal    ram_raddr          :  std_logic_vector(RAM_ADDR_WIDTH-1 downto 0);
+    signal    ram_waddr          :  std_logic_vector(RAM_ADDR_WIDTH-1 downto 0);
+    signal    ram_we             :  std_logic_vector(RAM_NUM       -1 downto 0);
+    signal    ram_wdata          :  std_logic_vector(RAM_DATA_WIDTH-1 downto 0);
+    signal    ram_rdata          :  std_logic_vector(RAM_DATA_WIDTH-1 downto 0);
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
     component DPRAM
         generic (
             DATA_BITS   : integer := 32;
-            ADDR_BITS   : integer :=  6
+            ADDR_BITS   : integer :=  6;
+            N           : integer :=  1
         );
         port (
             WCLK        : in  std_logic;
-            WE          : in  std_logic_vector(DATA_BITS-1 downto 0);
+            WE          : in  std_logic_vector(N        -1 downto 0);
             WADDR       : in  std_logic_vector(ADDR_BITS-1 downto 0);
             WDATA       : in  std_logic_vector(DATA_BITS-1 downto 0);
             RADDR       : in  std_logic_vector(ADDR_BITS-1 downto 0);
@@ -145,186 +152,186 @@ begin
     -- Control Status Register AXI I/F
     -------------------------------------------------------------------------------
     AXI_IF: block
-        type      STATE_TYPE    is (IDLE, S_REQ, S_ACK);
+        constant  AXI4_LITE     :  integer := 1;
+        type      STATE_TYPE    is (IDLE, S_ACK);
         signal    r_state       :  STATE_TYPE;
-        signal    w_state       :  STATE_TYPE;
         constant  RAM_DATA_SIZE :  integer := CALC_DATA_SIZE(RAM_DATA_WIDTH);
-        constant  sig_1         :  std_logic := '1';
-        signal    regs_req      :  std_logic;
-        signal    regs_write    :  std_logic;
-        signal    regs_ack      :  std_logic;
-        constant  regs_err      :  std_logic := '0';
-        signal    regs_addr     :  std_logic_vector(RAM_ADDR_WIDTH+RAM_DATA_SIZE-1 downto 0);
-        signal    regs_ben      :  std_logic_vector(RAM_DATA_WIDTH/8            -1 downto 0);
-        signal    regs_wdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
-        signal    regs_rdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
+        constant  REG_ADDR_WIDTH:  integer := RAM_ADDR_WIDTH+RAM_DATA_SIZE;
+        constant  REG_DATA_WIDTH:  integer := RAM_DATA_WIDTH;
+        signal    r_req         :  std_logic;
+        signal    r_ack         :  std_logic;
+        constant  r_err         :  std_logic := '0';
+        signal    r_addr        :  std_logic_vector(REG_ADDR_WIDTH  -1 downto 0);
+        signal    r_ben         :  std_logic_vector(REG_DATA_WIDTH/8-1 downto 0);
+        signal    r_data        :  std_logic_vector(REG_DATA_WIDTH  -1 downto 0);
+        signal    w_state       :  STATE_TYPE;
+        signal    w_req         :  std_logic;
+        signal    w_ack         :  std_logic;
+        constant  w_err         :  std_logic := '0';
+        signal    w_addr        :  std_logic_vector(REG_ADDR_WIDTH  -1 downto 0);
+        signal    w_ben         :  std_logic_vector(REG_DATA_WIDTH/8-1 downto 0);
+        signal    w_data        :  std_logic_vector(REG_DATA_WIDTH  -1 downto 0);
     begin
-        AXI4: AXI4_REGISTER_INTERFACE                  --
-            generic map (                              --
-                AXI4_LITE       => 1                 , -- 
-                AXI4_ADDR_WIDTH => C_ADDR_WIDTH      , --
-                AXI4_DATA_WIDTH => C_DATA_WIDTH      , --
-                AXI4_ID_WIDTH   => C_ID_WIDTH        , --
-                REGS_ADDR_WIDTH => regs_addr'length  , --
-                REGS_DATA_WIDTH => RAM_DATA_WIDTH    , --
-                WDATA_PIPELINE  => 0                 , --
-                RDATA_PIPELINE  => 0                   --
-            )                                          -- 
-            port map (                                 -- 
+        ---------------------------------------------------------------------------
+        -- 
+        ---------------------------------------------------------------------------
+        R: AXI4_REGISTER_READ_INTERFACE              -- 
+            generic map (                            -- 
+                AXI4_LITE       => AXI4_LITE       , -- 
+                AXI4_ADDR_WIDTH => C_ADDR_WIDTH    , -- 
+                AXI4_DATA_WIDTH => C_DATA_WIDTH    , -- 
+                AXI4_ID_WIDTH   => C_ID_WIDTH      , -- 
+                REGS_ADDR_WIDTH => r_addr'length   , -- 
+                REGS_DATA_WIDTH => r_data'length     -- 
+            )                                        -- 
+            port map (                               -- 
             -----------------------------------------------------------------------
             -- Clock and Reset Signals.
             -----------------------------------------------------------------------
-                CLK             => ACLK              , -- In  :
-                RST             => RST               , -- In  :
-                CLR             => CLR               , -- In  :
+                CLK             => ACLK            , -- In  :
+                RST             => RST             , -- In  :
+                CLR             => CLR             , -- In  :
             -----------------------------------------------------------------------
             -- AXI4 Read Address Channel Signals.
             -----------------------------------------------------------------------
-                ARID            => C_ARID            , -- In  :
-                ARADDR          => C_ARADDR          , -- In  :
-                ARLEN           => C_ARLEN           , -- In  :
-                ARSIZE          => C_ARSIZE          , -- In  :
-                ARBURST         => C_ARBURST         , -- In  :
-                ARVALID         => C_ARVALID         , -- In  :
-                ARREADY         => C_ARREADY         , -- Out :
+                ARID            => C_ARID          , -- In  :
+                ARADDR          => C_ARADDR        , -- In  :
+                ARLEN           => C_ARLEN         , -- In  :
+                ARSIZE          => C_ARSIZE        , -- In  :
+                ARBURST         => C_ARBURST       , -- In  :
+                ARVALID         => C_ARVALID       , -- In  :
+                ARREADY         => C_ARREADY       , -- Out :
             -----------------------------------------------------------------------
             -- AXI4 Read Data Channel Signals.
             -----------------------------------------------------------------------
-                RID             => C_RID             , -- Out :
-                RDATA           => C_RDATA           , -- Out :
-                RRESP           => C_RRESP           , -- Out :
-                RLAST           => C_RLAST           , -- Out :
-                RVALID          => C_RVALID          , -- Out :
-                RREADY          => C_RREADY          , -- In  :
+                RID             => C_RID           , -- Out :
+                RDATA           => C_RDATA         , -- Out :
+                RRESP           => C_RRESP         , -- Out :
+                RLAST           => C_RLAST         , -- Out :
+                RVALID          => C_RVALID        , -- Out :
+                RREADY          => C_RREADY        , -- In  :
             -----------------------------------------------------------------------
+            -- Register Write Interface.
+            -----------------------------------------------------------------------
+                REGS_REQ        => r_req           , -- Out :
+                REGS_ACK        => r_ack           , -- In  :
+                REGS_ERR        => r_err           , -- In  :
+                REGS_ADDR       => r_addr          , -- Out :
+                REGS_BEN        => r_ben           , -- Out :
+                REGS_DATA       => r_data            -- In  :
+            );                                       -- 
+        ---------------------------------------------------------------------------
+        -- 
+        ---------------------------------------------------------------------------
+        W: AXI4_REGISTER_WRITE_INTERFACE             -- 
+            generic map (                            -- 
+                AXI4_LITE       => AXI4_LITE       , -- 
+                AXI4_ADDR_WIDTH => C_ADDR_WIDTH    , -- 
+                AXI4_DATA_WIDTH => C_DATA_WIDTH    , -- 
+                AXI4_ID_WIDTH   => C_ID_WIDTH      , -- 
+                REGS_ADDR_WIDTH => w_addr'length   , -- 
+                REGS_DATA_WIDTH => w_data'length     --
+            )                                        -- 
+            port map (                               -- 
+            ---------------------------------------------------------------------------
+            -- Clock and Reset Signals.
+            ---------------------------------------------------------------------------
+                CLK             => ACLK            , -- In  :
+                RST             => RST             , -- In  :
+                CLR             => CLR             , -- In  :
+            ---------------------------------------------------------------------------
             -- AXI4 Write Address Channel Signals.
-            -----------------------------------------------------------------------
-                AWID            => C_AWID            , -- In  :
-                AWADDR          => C_AWADDR          , -- In  :
-                AWLEN           => C_AWLEN           , -- In  :
-                AWSIZE          => C_AWSIZE          , -- In  :
-                AWBURST         => C_AWBURST         , -- In  :
-                AWVALID         => C_AWVALID         , -- In  :
-                AWREADY         => C_AWREADY         , -- Out :
-            -----------------------------------------------------------------------
+            ---------------------------------------------------------------------------
+                AWID            => C_AWID          , -- In  :
+                AWADDR          => C_AWADDR        , -- In  :
+                AWLEN           => C_AWLEN         , -- In  :
+                AWSIZE          => C_AWSIZE        , -- In  :
+                AWBURST         => C_AWBURST       , -- In  :
+                AWVALID         => C_AWVALID       , -- In  :
+                AWREADY         => C_AWREADY       , -- Out :
+            ---------------------------------------------------------------------------
             -- AXI4 Write Data Channel Signals.
-            -----------------------------------------------------------------------
-                WDATA           => C_WDATA           , -- In  :
-                WSTRB           => C_WSTRB           , -- In  :
-                WLAST           => C_WLAST           , -- In  :
-                WVALID          => C_WVALID          , -- In  :
-                WREADY          => C_WREADY          , -- Out :
-            -----------------------------------------------------------------------
+            ---------------------------------------------------------------------------
+                WDATA           => C_WDATA         , -- In  :
+                WSTRB           => C_WSTRB         , -- In  :
+                WLAST           => C_WLAST         , -- In  :
+                WVALID          => C_WVALID        , -- In  :
+                WREADY          => C_WREADY        , -- Out :
+            ---------------------------------------------------------------------------
             -- AXI4 Write Response Channel Signals.
-            -----------------------------------------------------------------------
-                BID             => C_BID             , -- Out :
-                BRESP           => C_BRESP           , -- Out :
-                BVALID          => C_BVALID          , -- Out :
-                BREADY          => C_BREADY          , -- In  :
-            -----------------------------------------------------------------------
-            -- Register Interface.
-            -----------------------------------------------------------------------
-                REGS_REQ        => regs_req          , -- Out :
-                REGS_WRITE      => regs_write        , -- Out :
-                REGS_ACK        => regs_ack          , -- In  :
-                REGS_ERR        => regs_err          , -- In  :
-                REGS_ADDR       => regs_addr         , -- Out :
-                REGS_BEN        => regs_ben          , -- Out :
-                REGS_WDATA      => regs_wdata        , -- Out :
-                REGS_RDATA      => regs_rdata          -- In  :
-            );
+            ---------------------------------------------------------------------------
+                BID             => C_BID           , -- Out :
+                BRESP           => C_BRESP         , -- Out :
+                BVALID          => C_BVALID        , -- Out :
+                BREADY          => C_BREADY        , -- In  :
+            ---------------------------------------------------------------------------
+            -- Register Write Interface.
+            ---------------------------------------------------------------------------
+                REGS_REQ        => w_req           , -- Out :
+                REGS_ACK        => w_ack           , -- In  :
+                REGS_ERR        => w_err           , -- In  :
+                REGS_ADDR       => w_addr          , -- Out :
+                REGS_BEN        => w_ben           , -- Out :
+                REGS_DATA       => w_data            -- Out :
+            );                                       -- 
         ---------------------------------------------------------------------------
         -- 
         ---------------------------------------------------------------------------
         process (ACLK, RST) begin
             if (RST = '1') then
-                r_state    <= IDLE;
-                ram_raddr  <= (others => '0');
+                r_state <= IDLE;
             elsif (ACLK'event and ACLK = '1') then
                 case r_state is
                     when IDLE =>
-                        if (regs_req = '1' and regs_write = '0') then
-                            r_state   <= S_REQ;
+                        if (r_req = '1') then
+                            r_state <= S_ACK;
                         else
-                            r_state   <= IDLE;
+                            r_state <= IDLE;
                         end if;
-                        ram_raddr  <= regs_addr(regs_addr'high downto RAM_DATA_SIZE);
-                    when S_REQ =>
-                        r_state    <= S_ACK;
                     when others =>
-                        r_state    <= IDLE;
-                        ram_raddr  <= (others => '0');
+                        r_state <= IDLE;
                 end case;
             end if;
         end process;
         process (ACLK) begin
             if (ACLK'event and ACLK = '1') then
-                regs_rdata <= ram_rdata;
+                r_data <= ram_rdata;
             end if;
-        end process;                           
+        end process;
+        ram_raddr <= r_addr(r_addr'high downto RAM_DATA_SIZE);
+        r_ack     <= '1' when (r_state = S_ACK) else '0';
         ---------------------------------------------------------------------------
         -- 
         ---------------------------------------------------------------------------
-        process (ACLK, RST) begin
-            if (RST = '1') then
-                w_state    <= IDLE;
-                ram_waddr  <= (others => '0');
-                ram_wdata  <= (others => '0');
-                ram_we     <= (others => '0');
-            elsif (ACLK'event and ACLK = '1') then
-                case w_state is
-                    when IDLE =>
-                        if (regs_req = '1' and regs_write = '1') then
-                            w_state   <= S_ACK; -- early acknowledge.
-                            ram_waddr <= regs_addr(regs_addr'high downto RAM_DATA_SIZE);
-                            ram_wdata <= regs_wdata;
-                            for i in 0 to RAM_DATA_WIDTH-1 loop
-                                if (regs_ben(i/8) = '1') then
-                                    ram_we(i) <= '1';
-                                else
-                                    ram_we(i) <= '0';
-                                end if;
-                            end loop;
-                        else
-                            w_state   <= IDLE;
-                            ram_waddr <= (others => '0');
-                            ram_wdata <= (others => '0');
-                            ram_we    <= (others => '0');
-                        end if;
-                    when S_REQ =>
-                        w_state   <= S_ACK;
-                        ram_waddr <= (others => '0');
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                    when S_ACK =>
-                        w_state   <= IDLE;
-                        ram_waddr <= (others => '0');
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                    when others =>
-                        w_state   <= IDLE;
-                        ram_waddr <= (others => '0');
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                end case;
+        process (w_req, w_ben) begin
+            if (w_req = '1') then
+                for i in ram_we'range loop
+                    ram_we(i) <= w_ben((i*WORD_BITS)/8);
+                end loop;
+            else
+                ram_we <= (others => '0');
             end if;
         end process;
-        regs_ack <= '1' when (r_state = S_ACK or w_state = S_ACK) else '0';
+        ram_waddr <= w_addr(w_addr'high downto RAM_DATA_SIZE);
+        ram_wdata <= w_data;
+        w_state   <= S_ACK when (w_req = '1') else IDLE;
+        w_ack     <= '1'   when (w_req = '1') else '0';
     end block;
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
     U: DPRAM
         generic map (
+            N           => RAM_NUM       ,
             DATA_BITS   => RAM_DATA_WIDTH,
             ADDR_BITS   => RAM_ADDR_WIDTH
         )
         port map (
-            WCLK        => ACLK         ,
-            WE          => ram_we       ,
-            WADDR       => ram_waddr    ,
-            WDATA       => ram_wdata    ,
-            RADDR       => ram_raddr    ,
+            WCLK        => ACLK          ,
+            WE          => ram_we        ,
+            WADDR       => ram_waddr     ,
+            WDATA       => ram_wdata     ,
+            RADDR       => ram_raddr     ,
             RDATA       => ram_rdata
         );
 end RTL;

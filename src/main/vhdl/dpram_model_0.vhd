@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
 --!     @file    dpram_model.vhd
 --!     @brief   Generic Dual Port RAM Architecture(Model)
---!     @version 1.0.0
---!     @date    2026/4/27
+--!     @version 1.1.0
+--!     @date    2026/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -40,7 +40,7 @@
 library ieee;
 use     ieee.std_logic_1164.all;
 use     ieee.numeric_std.all;
-architecture MODEL of DPRAM is
+architecture MODEL_0 of DPRAM is
     constant  INDEX_MIN     :  integer := 0;
     constant  INDEX_MAX     :  integer := 2**ADDR_BITS-1;
     subtype   INDEX_TYPE    is integer range INDEX_MIN to INDEX_MAX;
@@ -57,6 +57,7 @@ architecture MODEL of DPRAM is
         end loop;
         return to_integer(u_index);
     end function;
+    constant  WORD_BITS     :  integer := DATA_BITS/N;
     subtype   DATA_TYPE     is std_logic_vector(DATA_BITS-1 downto 0);
     type      DATA_VECTOR   is array(integer range <>) of DATA_TYPE;
     signal    ram           :  DATA_VECTOR(INDEX_MIN to INDEX_MAX);
@@ -68,11 +69,11 @@ begin
     process (WCLK) begin
         if (WCLK'event and WCLK = '1') then
             for pos in DATA_TYPE'range loop
-                if (WE(pos) = '1') then
+                if (WE(pos/WORD_BITS) = '1') then
                     ram(w_index)(pos) <= WDATA(pos);
                 end if;
             end loop;
         end if;
     end process;
     RDATA  <= ram(r_index);
-end MODEL;
+end MODEL_0;
