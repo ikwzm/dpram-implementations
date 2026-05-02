@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------------
---!     @file    dpram.vhd
---!     @brief   Generic Dual Port RAM Entity
+--!     @file    dpram_model.vhd
+--!     @brief   Generic Dual Port RAM Architecture(Model)
 --!     @version 1.1.0
 --!     @date    2026/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
@@ -34,23 +34,46 @@
 --      OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 -----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
+-- アーキテクチャ本体
+-----------------------------------------------------------------------------------
 library ieee;
 use     ieee.std_logic_1164.all;
------------------------------------------------------------------------------------
---! @brief DPRAM :
------------------------------------------------------------------------------------
-entity DPRAM is
-    generic (
-        DATA_BITS   : integer := 32;
-        ADDR_BITS   : integer :=  6;
-        N           : integer :=  1
-    );
-    port (
-        WCLK        : in  std_logic;
-        WE          : in  std_logic_vector(N        -1 downto 0);
-        WADDR       : in  std_logic_vector(ADDR_BITS-1 downto 0);
-        WDATA       : in  std_logic_vector(DATA_BITS-1 downto 0);
-        RADDR       : in  std_logic_vector(ADDR_BITS-1 downto 0);
-        RDATA       : out std_logic_vector(DATA_BITS-1 downto 0)
-    );
-end DPRAM;
+use     ieee.numeric_std.all;
+architecture MODEL_0 of DPRAM is
+    constant  INDEX_MIN     :  integer := 0;
+    constant  INDEX_MAX     :  integer := 2**ADDR_BITS-1;
+    subtype   INDEX_TYPE    is integer range INDEX_MIN to INDEX_MAX;
+    function  addr_to_index(ADDR: std_logic_vector) return INDEX_TYPE is
+        alias     u_addr    :  std_logic_vector(ADDR'length-1 downto 0) is ADDR;
+        variable  u_index   :  unsigned(u_addr'range);
+    begin
+        for i in u_index'range loop
+            if (u_addr(i) = '1') then
+                u_index(i) := '1';
+            else
+                u_index(i) := '0';
+            end if;
+        end loop;
+        return to_integer(u_index);
+    end function;
+    constant  WORD_BITS     :  integer := DATA_BITS/N;
+    subtype   DATA_TYPE     is std_logic_vector(DATA_BITS-1 downto 0);
+    type      DATA_VECTOR   is array(integer range <>) of DATA_TYPE;
+    signal    ram           :  DATA_VECTOR(INDEX_MIN to INDEX_MAX);
+    signal    r_index       :  INDEX_TYPE;
+    signal    w_index       :  INDEX_TYPE;
+begin
+    w_index <= addr_to_index(WADDR);
+    r_index <= addr_to_index(RADDR);
+    process (WCLK) begin
+        if (WCLK'event and WCLK = '1') then
+            for pos in DATA_TYPE'range loop
+                if (WE(pos/WORD_BITS) = '1') then
+                    ram(w_index)(pos) <= WDATA(pos);
+                end if;
+            end loop;
+        end if;
+    end process;
+    RDATA  <= ram(r_index);
+end MODEL_0;

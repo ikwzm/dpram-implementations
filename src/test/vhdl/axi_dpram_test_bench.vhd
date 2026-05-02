@@ -1,8 +1,8 @@
 -----------------------------------------------------------------------------------
 --!     @file    axi_dpram_test_bench.vhd
 --!     @brief   Test Bench axi_dpram
---!     @version 1.3.0
---!     @date    2026/4/27
+--!     @version 1.1.0
+--!     @date    2026/5/1
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -45,6 +45,8 @@ entity  AXI_DPRAM_TEST_BENCH is
         SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
         RAM_ADDR_WIDTH  : integer := 6;
         RAM_DATA_WIDTH  : integer := 32;
+        RAM_NUM         : integer := 4;
+        PRINT_ENABLE    : boolean := TRUE;
         FINISH_ABORT    : boolean := FALSE
     );
 end     AXI_DPRAM_TEST_BENCH;
@@ -301,6 +303,8 @@ begin
             TAG             => NAME            , -- 
             TAG_WIDTH       => 0               , -- 
             TIME_WIDTH      => 13              , -- 
+            READ_ENABLE     => PRINT_ENABLE    , --
+            WRITE_ENABLE    => PRINT_ENABLE    , --
             WIDTH           => WIDTH             -- 
         )                                        -- 
         port map (                               -- 
@@ -379,7 +383,8 @@ begin
             C_DATA_WIDTH    => AXI4_DATA_WIDTH , 
             C_ID_WIDTH      => WIDTH.ID        ,
             RAM_ADDR_WIDTH  => RAM_ADDR_WIDTH  ,
-            RAM_DATA_WIDTH  => RAM_DATA_WIDTH
+            RAM_DATA_WIDTH  => RAM_DATA_WIDTH  ,
+            RAM_NUM         => RAM_NUM         
         )
         port map (
         ---------------------------------------------------------------------------
@@ -477,30 +482,92 @@ end MODEL;
 -----------------------------------------------------------------------------------
 --
 -----------------------------------------------------------------------------------
-entity  AXI_DPRAM_64x32_MODEL_TEST_BENCH is
+entity  AXI_DPRAM_64x32_N4_MODEL_TEST_BENCH is
     generic (
-        NAME            : STRING  := "AXI_DPRAM_64x32_MODEL_TEST_BENCH";
+        NAME            : STRING  := "AXI_DPRAM_64x32_N4_MODEL_TEST_BENCH";
         SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
+        PRINT_ENABLE    : boolean := TRUE;
         FINISH_ABORT    : boolean := FALSE
     );
-end     AXI_DPRAM_64x32_MODEL_TEST_BENCH;
-architecture MODEL of AXI_DPRAM_64x32_MODEL_TEST_BENCH is
-  component  AXI_DPRAM_TEST_BENCH 
-     generic (
-        NAME            : STRING  := "AXI_DPRAM_TEST_BENCH";
-        SCENARIO_FILE   : STRING  := "axi_dpram_test_bench.snr";
-        RAM_ADDR_WIDTH  : integer := 6;
-        RAM_DATA_WIDTH  : integer := 32;
-        FINISH_ABORT    : boolean := FALSE
-    );
-  end component;
+end     AXI_DPRAM_64x32_N4_MODEL_TEST_BENCH;
+architecture MODEL of AXI_DPRAM_64x32_N4_MODEL_TEST_BENCH is
 begin
-    U: AXI_DPRAM_TEST_BENCH generic map(
+    U: entity WORK.AXI_DPRAM_TEST_BENCH generic map(
         NAME            => NAME         ,
         SCENARIO_FILE   => SCENARIO_FILE,
         RAM_ADDR_WIDTH  => 6            ,
         RAM_DATA_WIDTH  => 32           ,
+        RAM_NUM         => 4            ,
+        PRINT_ENABLE    => PRINT_ENABLE ,
         FINISH_ABORT    => FINISH_ABORT
     );
 end MODEL;
-
+-----------------------------------------------------------------------------------
+--
+-----------------------------------------------------------------------------------
+entity  AXI_DPRAM_64x32_N8_MODEL_TEST_BENCH is
+    generic (
+        NAME            : STRING  := "AXI_DPRAM_64x32_N8_MODEL_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
+        PRINT_ENABLE    : boolean := TRUE;
+        FINISH_ABORT    : boolean := FALSE
+    );
+end     AXI_DPRAM_64x32_N8_MODEL_TEST_BENCH;
+architecture MODEL of AXI_DPRAM_64x32_N8_MODEL_TEST_BENCH is
+begin
+    U: entity WORK.AXI_DPRAM_TEST_BENCH generic map(
+        NAME            => NAME         ,
+        SCENARIO_FILE   => SCENARIO_FILE,
+        RAM_ADDR_WIDTH  => 6            ,
+        RAM_DATA_WIDTH  => 32           ,
+        RAM_NUM         => 8            ,
+        PRINT_ENABLE    => PRINT_ENABLE ,
+        FINISH_ABORT    => FINISH_ABORT
+    );
+end MODEL;
+-----------------------------------------------------------------------------------
+--
+-----------------------------------------------------------------------------------
+entity  AXI_DPRAM_64x32_N16_MODEL_TEST_BENCH is
+    generic (
+        NAME            : STRING  := "AXI_DPRAM_64x32_N16_MODEL_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
+        PRINT_ENABLE    : boolean := TRUE;
+        FINISH_ABORT    : boolean := FALSE
+    );
+end     AXI_DPRAM_64x32_N16_MODEL_TEST_BENCH;
+architecture MODEL of AXI_DPRAM_64x32_N16_MODEL_TEST_BENCH is
+begin
+    U: entity WORK.AXI_DPRAM_TEST_BENCH generic map(
+        NAME            => NAME         ,
+        SCENARIO_FILE   => SCENARIO_FILE,
+        RAM_ADDR_WIDTH  => 6            ,
+        RAM_DATA_WIDTH  => 32           ,
+        RAM_NUM         => 16           ,
+        PRINT_ENABLE    => PRINT_ENABLE ,
+        FINISH_ABORT    => FINISH_ABORT
+    );
+end MODEL;
+-----------------------------------------------------------------------------------
+--
+-----------------------------------------------------------------------------------
+entity  AXI_DPRAM_64x32_N32_MODEL_TEST_BENCH is
+    generic (
+        NAME            : STRING  := "AXI_DPRAM_64x32_N32_MODEL_TEST_BENCH";
+        SCENARIO_FILE   : STRING  := "axi_dpram_64x32_test_bench.snr";
+        PRINT_ENABLE    : boolean := TRUE;
+        FINISH_ABORT    : boolean := FALSE
+    );
+end     AXI_DPRAM_64x32_N32_MODEL_TEST_BENCH;
+architecture MODEL of AXI_DPRAM_64x32_N32_MODEL_TEST_BENCH is
+begin
+    U: entity WORK.AXI_DPRAM_TEST_BENCH generic map(
+        NAME            => NAME         ,
+        SCENARIO_FILE   => SCENARIO_FILE,
+        RAM_ADDR_WIDTH  => 6            ,
+        RAM_DATA_WIDTH  => 32           ,
+        RAM_NUM         => 32           ,
+        PRINT_ENABLE    => PRINT_ENABLE ,
+        FINISH_ABORT    => FINISH_ABORT
+    );
+end MODEL;
