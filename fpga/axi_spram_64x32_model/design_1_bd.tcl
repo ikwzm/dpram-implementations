@@ -207,12 +207,13 @@ proc create_root_design { parentCell } {
   # 
   # Create instance: AXI_SPRAM and set properties
   #
-  set AXI_SPRAM_64x32_0 [ create_bd_cell -type ip -vlnv ikwzm:PIPEWORK:AXI_SPRAM:1.0 AXI_SPRAM_64X32_0 ]
+  set AXI_SPRAM_64x32_0 [ create_bd_cell -type ip -vlnv ikwzm:PIPEWORK:AXI_SPRAM:1.1 AXI_SPRAM_64X32_0 ]
   set_property -dict [ list CONFIG.C_ADDR_WIDTH   {32} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.C_DATA_WIDTH   {32} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.C_ID_WIDTH      {5} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.RAM_ADDR_WIDTH  {5} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.RAM_DATA_WIDTH {32} ] $AXI_SPRAM_64x32_0
+  set_property -dict [ list CONFIG.RAM_NUM         {4} ] $AXI_SPRAM_64x32_0
   #
   # Create instance: axi_interconnect_csr, and set properties
   #

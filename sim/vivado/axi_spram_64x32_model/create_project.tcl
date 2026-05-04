@@ -5,7 +5,7 @@
 set project_directory       [file dirname [info script]]
 set project_name            "axi_spram_64x32_model"
 set device_parts            "xc7z010clg400-1"
-set test_bench              "AXI_SPRAM_64x32_MODEL_TEST_BENCH"
+set test_bench              "AXI_SPRAM_64X32_N4_MODEL_TEST_BENCH"
 set scenario_path           [file join ".." ".." ".." "src" "test" "scenarios" ]
 set scenario_file           [file join $scenario_path "axi_dpram_64x32_test_bench.snr" ]
 #
@@ -105,7 +105,8 @@ if       { [string first "2025.1" $current_vivado_version ] == 0 } {
 }
 set obj [get_filesets sim_1]
 set_property "top"     $test_bench $obj
-set_property "generic" "SCENARIO_FILE=$scenario_full_path FINISH_ABORT=true" $obj
+set_property "generic" "SCENARIO_FILE=$scenario_full_path PRINT_ENABLE=true FINISH_ABORT=true" $obj
+set_property -name {xsim.simulate.runtime} -value {100us} -objects $obj
 
 update_compile_order -fileset sources_1
 update_compile_order -fileset sim_1
