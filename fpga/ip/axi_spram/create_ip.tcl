@@ -3,7 +3,7 @@
 #
 set project_name            "axi_spram"
 set ip_name                 "AXI_SPRAM"
-set ip_version              "1.0"
+set ip_version              "1.1"
 set ip_core_revision        1
 set ip_vendor_name          "ikwzm"
 set ip_library_name         "PIPEWORK"
