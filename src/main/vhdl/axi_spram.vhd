@@ -2,7 +2,7 @@
 --!     @file    axi_spram.vhd
 --!     @brief   Single Port RAM with AXI4 Lite I/F
 --!     @version 1.1.0
---!     @date    2026/4/27
+--!     @date    2026/5/4
 --!     @author  Ichiro Kawazome <ichiro_k@ca2.so-net.ne.jp>
 -----------------------------------------------------------------------------------
 --
@@ -49,7 +49,8 @@ entity  AXI_SPRAM is
         C_ID_WIDTH      : integer :=  4;
         C_DATA_WIDTH    : integer := 32;
         RAM_ADDR_WIDTH  : integer :=  6;
-        RAM_DATA_WIDTH  : integer := 32
+        RAM_DATA_WIDTH  : integer := 32;
+        RAM_NUM         : integer :=  4
     );
     port (
         ARESETn         : in    std_logic;
@@ -114,21 +115,26 @@ architecture RTL of AXI_SPRAM is
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
+    constant  WORD_BITS          :  integer := RAM_DATA_WIDTH/RAM_NUM;
+    -------------------------------------------------------------------------------
+    -- 
+    -------------------------------------------------------------------------------
     signal    ram_addr           :  std_logic_vector(RAM_ADDR_WIDTH-1 downto 0);
-    signal    ram_we             :  std_logic_vector(RAM_DATA_WIDTH-1 downto 0);
+    signal    ram_we             :  std_logic_vector(RAM_NUM       -1 downto 0);
     signal    ram_wdata          :  std_logic_vector(RAM_DATA_WIDTH-1 downto 0);
     signal    ram_rdata          :  std_logic_vector(RAM_DATA_WIDTH-1 downto 0);
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
-    component  SPRAM
+    component SPRAM
         generic (
             DATA_BITS   : integer := 32;
-            ADDR_BITS   : integer :=  6
+            ADDR_BITS   : integer :=  6;
+            N           : integer :=  1
         );
         port (
             CLK         : in  std_logic;
-            WE          : in  std_logic_vector(DATA_BITS-1 downto 0);
+            WE          : in  std_logic_vector(N        -1 downto 0);
             ADDR        : in  std_logic_vector(ADDR_BITS-1 downto 0);
             WDATA       : in  std_logic_vector(DATA_BITS-1 downto 0);
             RDATA       : out std_logic_vector(DATA_BITS-1 downto 0)
@@ -143,19 +149,21 @@ begin
     -- Control Status Register AXI I/F
     -------------------------------------------------------------------------------
     AXI_IF: block
-        type      STATE_TYPE    is (IDLE, S_REQ, S_ACK);
+        type      STATE_TYPE    is (IDLE, S_ACK);
         signal    r_state       :  STATE_TYPE;
         signal    w_state       :  STATE_TYPE;
         constant  RAM_DATA_SIZE :  integer := CALC_DATA_SIZE(RAM_DATA_WIDTH);
+        constant  REG_ADDR_WIDTH:  integer := RAM_ADDR_WIDTH+RAM_DATA_SIZE;
+        constant  REG_DATA_WIDTH:  integer := RAM_DATA_WIDTH;
         constant  sig_1         :  std_logic := '1';
         signal    regs_req      :  std_logic;
         signal    regs_write    :  std_logic;
         signal    regs_ack      :  std_logic;
         constant  regs_err      :  std_logic := '0';
-        signal    regs_addr     :  std_logic_vector(RAM_ADDR_WIDTH+RAM_DATA_SIZE-1 downto 0);
-        signal    regs_ben      :  std_logic_vector(RAM_DATA_WIDTH/8            -1 downto 0);
-        signal    regs_wdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
-        signal    regs_rdata    :  std_logic_vector(RAM_DATA_WIDTH              -1 downto 0);
+        signal    regs_addr     :  std_logic_vector(REG_ADDR_WIDTH  -1 downto 0);
+        signal    regs_ben      :  std_logic_vector(REG_DATA_WIDTH/8-1 downto 0);
+        signal    regs_wdata    :  std_logic_vector(REG_DATA_WIDTH  -1 downto 0);
+        signal    regs_rdata    :  std_logic_vector(REG_DATA_WIDTH  -1 downto 0);
     begin
         AXI4: AXI4_REGISTER_INTERFACE                  --
             generic map (                              --
@@ -234,6 +242,10 @@ begin
         ---------------------------------------------------------------------------
         -- 
         ---------------------------------------------------------------------------
+        ram_addr <= regs_addr(regs_addr'high downto RAM_DATA_SIZE);
+        ---------------------------------------------------------------------------
+        -- 
+        ---------------------------------------------------------------------------
         process (ACLK, RST) begin
             if (RST = '1') then
                 r_state <= IDLE;
@@ -241,79 +253,45 @@ begin
                 case r_state is
                     when IDLE =>
                         if (regs_req = '1' and regs_write = '0') then
-                            r_state <= S_REQ;
+                            r_state <= S_ACK;
                         else
                             r_state <= IDLE;
                         end if;
-                    when S_REQ =>
-                        r_state <= S_ACK;
                     when others =>
                         r_state <= IDLE;
                 end case;
-            end if;
-        end process;
-        process (ACLK, RST) begin
-            if (RST = '1') then
-                ram_addr  <= (others => '0');
-            elsif (ACLK'event and ACLK = '1') then
-                if (regs_req = '1') then
-                    ram_addr  <= regs_addr(regs_addr'high downto RAM_DATA_SIZE);
-                end if;
             end if;
         end process;
         process (ACLK) begin
             if (ACLK'event and ACLK = '1') then
                 regs_rdata <= ram_rdata;
             end if;
-        end process;                           
+        end process;
         ---------------------------------------------------------------------------
         -- 
         ---------------------------------------------------------------------------
-        process (ACLK, RST) begin
-            if (RST = '1') then
-                w_state   <= IDLE;
-                ram_we    <= (others => '0');
-                ram_wdata <= (others => '0');
-            elsif (ACLK'event and ACLK = '1') then
-                case w_state is
-                    when IDLE =>
-                        if (regs_req = '1' and regs_write = '1') then
-                            w_state   <= S_ACK; -- early acknowledge.
-                            ram_wdata <= regs_wdata;
-                            for i in 0 to RAM_DATA_WIDTH-1 loop
-                                if (regs_ben(i/8) = '1') then
-                                    ram_we(i) <= '1';
-                                else
-                                    ram_we(i) <= '0';
-                                end if;
-                            end loop;
-                        else
-                            w_state   <= IDLE;
-                            ram_wdata <= (others => '0');
-                            ram_we    <= (others => '0');
-                        end if;
-                    when S_REQ =>
-                        w_state   <= S_ACK;
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                    when S_ACK =>
-                        w_state   <= IDLE;
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                    when others =>
-                        w_state   <= IDLE;
-                        ram_wdata <= (others => '0');
-                        ram_we    <= (others => '0');
-                end case;
+        process (regs_req, regs_write, regs_ben) begin
+            if (regs_req = '1' and regs_write = '1') then
+                for i in ram_we'range loop
+                    ram_we(i) <= regs_ben((i*WORD_BITS)/8);
+                end loop;
+            else
+                ram_we <= (others => '0');
             end if;
         end process;
-        regs_ack <= '1' when (r_state = S_ACK or w_state = S_ACK) else '0';
+        ram_wdata <= regs_wdata;
+        w_state   <= S_ACK when (regs_req = '1' and regs_write = '1') else IDLE;
+        ---------------------------------------------------------------------------
+        -- 
+        ---------------------------------------------------------------------------
+        regs_ack  <= '1' when (r_state = S_ACK or w_state = S_ACK) else '0';
     end block;
     -------------------------------------------------------------------------------
     -- 
     -------------------------------------------------------------------------------
     U: SPRAM
         generic map (
+            N           => RAM_NUM       ,
             DATA_BITS   => RAM_DATA_WIDTH,
             ADDR_BITS   => RAM_ADDR_WIDTH
         )
