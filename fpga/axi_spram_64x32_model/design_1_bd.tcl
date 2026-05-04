@@ -211,7 +211,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list CONFIG.C_ADDR_WIDTH   {32} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.C_DATA_WIDTH   {32} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.C_ID_WIDTH      {5} ] $AXI_SPRAM_64x32_0
-  set_property -dict [ list CONFIG.RAM_ADDR_WIDTH  {5} ] $AXI_SPRAM_64x32_0
+  set_property -dict [ list CONFIG.RAM_ADDR_WIDTH  {6} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.RAM_DATA_WIDTH {32} ] $AXI_SPRAM_64x32_0
   set_property -dict [ list CONFIG.RAM_NUM         {4} ] $AXI_SPRAM_64x32_0
   #
