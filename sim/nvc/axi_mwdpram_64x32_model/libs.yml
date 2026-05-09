@@ -1,0 +1,38 @@
+
+- Global:
+    Print    :  true
+
+- Library:
+    Name     :  DUMMY_PLUG
+    Format   :  "nvc -L ./ --work=#{library_name} -a #{file_name}"
+    Exclude  :  ["../../../Dummy_Plug/src/main/vhdl/core/sync_alt.vhd"]
+    PathList :  ["../../../Dummy_Plug/src/main/vhdl/"]
+
+- Library:
+    Name     :  PIPEWORK
+    Format   :  "nvc -L ./ --work=#{library_name} -a #{file_name}"
+    Exclude  :  ["../../../PipeWork/src/components/sdpram_altera_auto_select.vhd",
+                 "../../../PipeWork/src/components/sdpram_xilinx_auto_select.vhd",
+                 "../../../PipeWork/src/components/sdpram_xilinx_ultrascale_auto_select.vhd"]
+    PathList :  ["../../../PipeWork/src/"]
+
+- Library:
+    Name     :  WORK
+    Format   :  "nvc -L ./ --work=#{library_name} -a #{file_name}"
+    PathList :  ["../../../src/main/vhdl/" ,
+                 "../../../src/test/vhdl/" ]
+    Top      :  ["AXI_MWDPRAM_64x32_R4W4RF_MODEL_TEST_BENCH", 
+                 "AXI_MWDPRAM_64x32_R4W4WF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W4NC_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R8W4RF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R8W4WF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R8W4NC_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W8RF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W8WF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W8NC_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R1W4RF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R1W4WF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R1W4NC_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W1RF_MODEL_TEST_BENCH",
+                 "AXI_MWDPRAM_64x32_R4W1WF_MODEL_TEST_BENCH", 
+                 "AXI_MWDPRAM_64x32_R4W1NC_MODEL_TEST_BENCH"] 
