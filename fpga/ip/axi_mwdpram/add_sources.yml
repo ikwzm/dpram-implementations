@@ -1,0 +1,21 @@
+
+- Global:
+    Print    :  true
+
+- Library:
+    Name     :  pipework
+    Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
+    PathList :  
+        - "../../../PipeWork/src/"
+    Use      :
+        - "QUEUE_ARBITER(ONE_HOT_ARCH)"
+        - "SDPRAM(XILINX_AUTO_SELECT)"
+
+- Library:
+    Name     :  work
+    Format   :  "add_vhdl_file sources_1 #{library_name} #{file_name}"
+    PathList :  
+        - "../../../src/main/vhdl/"
+    Top      :
+        - "AXI_MWDPRAM"
+        
